@@ -87,8 +87,8 @@ create_temp_files () {
 		colNum=$(egrep ".{$(expand -t 1 $2 | wc -L)}" $2 | head -n 1 | wc -w )
 		for (( i=1; i <= colNum; i++  )); do
 			while read line; do
-				local val=$(echo $line | expand -t 1 | cut -d$' ' -f$i )
-				if [[ -n $val  ]]; then echo $val >> "${TMP}curr"; fi
+				local val=$(expand -t 1 <<< $line | cut -d$' ' -f$i )
+        [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
 			done < $2
 			count=$(get_average_file "${TMP}curr")
 			get_median_file "${TMP}curr" $count
