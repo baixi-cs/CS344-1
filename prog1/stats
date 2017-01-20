@@ -97,7 +97,7 @@ create_temp_files () {
 		print_columns
 	else print_usage_exit; fi
 }
-#### MAIN FUNCTION ####
+#### MAIN ENTRY POINT ####
 # check for proper number of arguments, if incorrect print_usage_exit
 if [[ $# < 1 || $# > 2 ]]; then
   print_usage_exit
