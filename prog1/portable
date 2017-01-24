@@ -1,19 +1,15 @@
 #!/bin/bash
 TMP=tmp$$ #Create temp file name variable
-err_report() {
-    echo "Error on line $1"
-}
 # Set up trap for Interupt, Hangup, and Terminate
 # trap will delete temp files and exit with code 1
 trap "rm -f $TMP*; exit 1" INT HUP TERM
-trap "rm -f $TMP*" EXIT
 # Function: print_usage_text
 # Arguments: None
 # Description: prints usage text and exits with code 1
 # Pre-Condition: Incorrect Syntax
 # Post-Condition: script terminated
 print_usage_exit () {
-  printf "$0 {-rows|-cols} [file]\n" 1>&2
+  printf "./stats {-rows|-cols} [file]\n" 1>&2
   exit 1
 }
 # Function: print_columns
@@ -35,10 +31,9 @@ print_columns () {
 # Post-Condition: stats displayed via stdout in rows
 print_rows () {
   printf "%s\t%s\n" "Average" "Median"
-  local avg=`cat "${TMP}avg"`; local med=`cat "${TMP}med"`
   for (( i=1; i <= $1; i++ )); do
-    printf "$(cut -d$' ' -f$i <<< $avg)\t"    
-    printf "$(cut -d$' ' -f$i <<< $med)\n"    
+    printf "$(cut -d$'\n' -f$i "${TMP}avg")\t"    
+    printf "$(cut -d$'\n' -f$i "${TMP}med")\n"    
   done
 }
 # Function: get_average_file
@@ -63,13 +58,12 @@ get_average_file () {
 get_median_file () {
   sort -n $1 -o $1
   local med_index=$2
-  if [[ $((med_index % 2)) == 0  ]]; then
+  if [ "$((med_index % 2))" -eq "0"  ]; then
     med_index=$(( ($med_index + 1) / 2 + 1  ))
   else 
     med_index=$(( ($med_index + 1) / 2 )); 
   fi
-  local line=`cat $1`
-  cut -d$' ' -f$med_index <<< $line >> "${TMP}med"
+  cut -d$'\n' "-f$med_index" $1 >> "${TMP}med"
 }
 # Function: create_temp_files
 # Arguments: $1: [-row | -col] $2: file to read from
@@ -94,7 +88,7 @@ create_temp_files () {
 		for (( i=1; i <= colNum; i++  )); do
 			while read line; do
 				local val=$(expand -t 1 <<< $line | cut -d$' ' -f$i )
-        [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
+        [ $(wc -w <<< $line) -ge $i ] && echo $val >> "${TMP}curr"
 			done < $2
 			count=$(get_average_file "${TMP}curr")
 			get_median_file "${TMP}curr" $count
@@ -105,10 +99,11 @@ create_temp_files () {
 }
 #### MAIN ENTRY POINT ####
 # check for proper number of arguments, if incorrect print_usage_exit
-if [[ $# < 1 || $# > 2 ]]; then print_usage_exit
-elif [[ -n $2 && ! -r $2 ]]; then echo "$0: '$2' unreadable" 1>&2; exit 1
+if [ "$#" -lt "1" ] || [ "$#" -gt "2" ]; then
+  print_usage_exit
 else
   data=$TMP
-  [[ $# == 1 ]] && cat > $data || data=$2
-  [[ -z $(head -n 1 $data) ]] || create_temp_files $1 $data
+  [ "$#" -eq "1" ] && cat > $data || data=$2
+  [ -z "$(head -n 1 $data)" ] || create_temp_files $1 $data
 fi
+rm -f $TMP*
