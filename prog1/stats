@@ -1,12 +1,11 @@
 #!/bin/bash
-TMP=tmp$$ #Create temp file name variable
-err_report() {
-    echo "Error on line $1"
-}
+TMP=tmp$$ #Create temp file variable with pid
 # Set up trap for Interupt, Hangup, and Terminate
 # trap will delete temp files and exit with code 1
 trap "rm -f $TMP*; exit 1" INT HUP TERM
+# trap EXIT code and remove temp files
 trap "rm -f $TMP*" EXIT
+####################################################################
 # Function: print_usage_text
 # Arguments: None
 # Description: prints usage text and exits with code 1
@@ -16,61 +15,92 @@ print_usage_exit () {
   printf "$0 {-rows|-cols} [file]\n" 1>&2
   exit 1
 }
+####################################################################
 # Function: print_columns
 # Arguments: None
 # Description: prints the Averages and Medians in Column Format
 # Pre-Condition: -c* option specified and *avg, *med files generated
 # Post-Condition: stats displayed via stdout in columns
 print_columns () {
+  # print Average header for column format with newline
   printf "Averages:\n"
+  # loop over avg temp file and print each value with tab
   while read num; do printf "%d\t" "$num"; done < "${TMP}avg"
+  # print newline then Median header for column format with newline
   printf "\nMedians:\n"
+  # loop over med temp file and print each value with tab
   while read num; do printf "%d\t" "$num"; done < "${TMP}med"
+  # print closing newline
   echo
 }
+###################################################################
 # Function: print_rows
 # Arguments: 1: number of values
 # Description: prints the Averages and Medians in Row Format
 # Pre-Condition: -r* option specified and *avg, *med files generated
 # Post-Condition: stats displayed via stdout in rows
 print_rows () {
+  # Print output table headers for row format
   printf "%s\t%s\n" "Average" "Median"
+  # store contents of avg and med temp files into variables
+  # this is a trick to replace newline delim with space delim
+  # space delim is more portable to earlier versions of cut
   local avg=`cat "${TMP}avg"`; local med=`cat "${TMP}med"`
+  # use for loop to loop a number of times equal to rows in original file
+  # special for loop using arthmetic expansion making it C-like
   for (( i=1; i <= $1; i++ )); do
-    printf "$(cut -d$' ' -f$i <<< $avg)\t"    
+    # cut column i from $avg variable and print with tab char
+    printf "$(cut -d$' ' -f$i <<< $avg)\t"
+    # cut column i from $med variable and print with newline char
     printf "$(cut -d$' ' -f$i <<< $med)\n"    
   done
 }
+#########################################################################
 # Function: get_average_file
 # Arguments: $1: filename
 # Description: computes average and appends to file named $TMPavg
 # Pre-Condition: file of integers delimited by newlines
 # Post-Condition: avg appended to $TMPavg file, echo count for capture
 get_average_file () {
+  # create local variables for count and sum of values in file
   local count=0; local sum=0
+  # read each line from file
   while read num; do
-    count=`expr $count + 1`
-    sum=`expr $sum + $num`
+    # increment count and add value to sum using arithmetic expansion
+    (( count++ ))
+    (( sum+=num )) 
   done < $1
+  # calculate average using "Half Round Up" formula with arithmetic expansion
+  # echo average into avg temp file
   echo $(( (sum + (count / 2)) / count  )) >> "${TMP}avg"
+  # echo count to stdout for capture
   echo $count
 }
+#############################################################################
 # Function: get_median_file
 # Arguments: $1: filename $2: count of numbers in file
 # Description: computes median and appends to file named $TMPmed
-# Pre-Condition: sorted file of integers delimited by newline
+# Pre-Condition: file of integers delimited by newline
 # Post-Condition: median appended to $TMPmed file
 get_median_file () {
+  # sort file of values into itself in ascending order
+  # -n sort numerically
+  # -o specify output file
   sort -n $1 -o $1
+  # store count of values in file for median calculation
   local med_index=$2
+  # if even number of values, get larger middle value
   if [[ $((med_index % 2)) == 0  ]]; then
-    med_index=$(( ($med_index + 1) / 2 + 1  ))
+    med_index=$(( $med_index / 2 + 1  ))
+  # if odd number of values get exact center value
   else 
     med_index=$(( ($med_index + 1) / 2 )); 
   fi
-  local line=`cat $1`
-  cut -d$' ' -f$med_index <<< $line >> "${TMP}med"
+  # cut out median value from file and append to med temp file
+  # replace newlines with space with tr for better cut portability
+  tr "\n" " " < $1 | cut -d$' ' -f$med_index  >> "${TMP}med"
 }
+###############################################################################
 # Function: create_temp_files
 # Arguments: $1: [-row | -col] $2: file to read from
 # Description: if -row, creates file for each row delimited by newline
@@ -78,37 +108,71 @@ get_median_file () {
 # Pre-Condition: information in file or stdin
 # Post-Condition: each row or col has its own temp file, # files returned
 create_temp_files () {
-	local count=0; 
+    # if rows are specified
 	if [[ $1 == -r* ]]; then
+        # read each row of input into line
 		while read line; do
+            # loop over each value in the row and append to temp file
+            # for loop works for any whitespace delimination of the row
 			for num in $line; do 
 				echo $num >> "${TMP}curr"
 			done
-			count=$(get_average_file "${TMP}curr")
+            # pass temp file to get_average_file and extract count from stdout
+			local count=$(get_average_file "${TMP}curr")
+            # pass temp file and count to get_median_file
 			get_median_file "${TMP}curr" $count
-			rm -f "${TMP}curr"    
+            # delete temp file to get ready for the next column
+			rm -f "${TMP}curr"
+        # lines are read from file in $2 
 		done < $2
-    print_rows $(wc -l < $2 )
+        # print average and median values in row format
+        # Expects number of rows
+        print_rows $(wc -l < $2 )
+    # else if columns are specified
 	elif [[ $1 == -c* ]]; then
+        # get the length (in words) of the longest row, i.e. number of columns
+        #   explanation:
+        #     $(expand -t 1 $2 | wc -L) - capture expression, length of
+        #       longest line in chars. expand makes tabs count as 1 space to wc
+        #     egrep ".{num}" file - sends all rows with num lines to stdout
+        #     head -n 1 - returns first line of output
+        #     wc -w - returns count of words
 		colNum=$(egrep ".{$(expand -t 1 $2 | wc -L)}" $2 | head -n 1 | wc -w )
+        # loop over file colNum times extracting column $i from each line into a temp file
 		for (( i=1; i <= colNum; i++  )); do
 			while read line; do
+                # store column in val, expand replaces tabs with space allowing
+                # input to be deliminated by space or tab
 				local val=$(expand -t 1 <<< $line | cut -d$' ' -f$i )
-        [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
+                # check that line actually has a column $i.
+                # cut has a nasty habit of returning the last char on a line if
+                # the exact column doesn't exist
+                [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
 			done < $2
-			count=$(get_average_file "${TMP}curr")
+            # pass temp file to get_average_file and extract count from stdout
+			local count=$(get_average_file "${TMP}curr")
+            # pass temp file and count to get_median_file
 			get_median_file "${TMP}curr" $count
+            # delete temp file to get ready for the next column
 			rm -f "${TMP}curr"
 		done
+        # print average and median values in column format
 		print_columns
+    # else print usage and exit 1
 	else print_usage_exit; fi
 }
-#### MAIN ENTRY POINT ####
+######################### MAIN ENTRY POINT #############################
 # check for proper number of arguments, if incorrect print_usage_exit
 if [[ $# < 1 || $# > 2 ]]; then print_usage_exit
+# if $2 exists and cannot be read then print error and exit 1
 elif [[ -n $2 && ! -r $2 ]]; then echo "$0: '$2' unreadable" 1>&2; exit 1
 else
+  # data is will be used to dump from stdin if $2 is empty
   data=$TMP
+  # if only 1 argument dump stdin to temp file, else store filename in data
   [[ $# == 1 ]] && cat > $data || data=$2
+  # if file is empty continue else call create_temp_files
+  # Requirement of project do not state empty first line is valid input so only
+  # first line is checked
   [[ -z $(head -n 1 $data) ]] || create_temp_files $1 $data
 fi
