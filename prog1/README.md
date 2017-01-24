@@ -10,7 +10,7 @@ What you’re going to submit is your script, called simply "stats".
 ##### *Overview*
 In this assignment, you will write a bash shell script to calculate mean averages and medians of numbers that can be input to your script from either a file or via stdin. This is the sort of calculation I might do when figuring out the grades for this course. The input will have whole number values separated by tabs, and each line will have the same number of values (for example, each row might be the scores of a student on assignments). Your script should be able to calculate the mean and median across the rows (like I might do to calculate an individual student's course grade) or down the columns (like I might do to find the average score on an assignment).
 
-You will probably need commands like these, so please read up on them:<code>while</code>, <code>cat</code>, <code>read</code>, <code>expr</code>, <code>cut<code/>, <code>head<code/>, <code>tail<code/>, <code>wc<code/>, and <code>sort<code/>.
+You will probably need commands like these, so please read up on them: <code>while</code>, <code>cat</code>, <code>read</code>, <code>expr</code>, <code>cut</code>, <code>head</code>, <code>tail</code>, <code>wc</code>, and <code>sort</code>.
 
 Your script must be called simply "stats". The general format of the stats command is:
 ```bash
@@ -25,7 +25,7 @@ Your stats program should be able to handle data with any reasonable number of r
 
 Though optional, I do recommend that you use temporary files; arrays are not recommended. For this assignment, any temporary files you use should be put in the current working directory. (A more standard place for temporary files is in /tmp but don't do that for this assignment; it makes grading easier if they are in the current directory.) Be sure any temporary file you create uses the process id as part of its name, so that there will not be conflicts if the stats program is running more than once. Be sure you remove any temporary files when your stats program is done. You should also use the trap command to catch interrupt, hangup, and terminate signals to remove the temporary files if the stats program is terminated unexpectedly.
 
-All values and results are and must be whole numbers. You may use the <code>expr<code/> command to do your calculations, or any other bash shell scripting method. Do not use any other languages other than bash shell scripting. Note that <code>expr<code/> only works with whole numbers. When you calculate the average you must round to the nearest whole number, where half values round up (i.e. 7.5 rounds up to 8). This is the most common form of rounding. When doing truncating integer division, this formula works to divide two numbers and end up with the proper rounding:
+All values and results are and must be whole numbers. You may use the <code>expr</code> command to do your calculations, or any other bash shell scripting method. Do not use any other languages other than bash shell scripting. Note that <code>expr</code> only works with whole numbers. When you calculate the average you must round to the nearest whole number, where half values round up (i.e. 7.5 rounds up to 8). This is the most common form of rounding. When doing truncating integer division, this formula works to divide two numbers and end up with the proper rounding:
 ```
 (a + (b/2)) / b
 ```
