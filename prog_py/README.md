@@ -1,4 +1,5 @@
 ### OSU CS344 ProgramPy
+#### student: grantjo
 ***
 #### *Requirements*
 1. Be contained in one single file, called mypython.py.
