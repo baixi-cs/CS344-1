@@ -35,7 +35,7 @@ http://www.mathsisfun.com/numbers/rounding-methods.html (Links to an external si
 
 To calculate the median, sort the values and take the middle value. For example, the median of 97, 90, and 83 is 90.  The median of 97, 90, 83, and 54 is still 90 - when there are an even number of values, choose the larger of the two middle values.
 
-Grading With a Script
+##### *Grading With a Script* 
 p1gradingscript is used for testing the stats program:
 
 This script is the very one that will be used to assign your script a grade. To use the script, just place it in the same directory as your stats script and run it like this:
