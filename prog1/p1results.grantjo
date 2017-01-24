@@ -2,13 +2,13 @@
 Creating file1 file2 file3 file4 file5
 
 
-total 12
--rw-rw----. 1 grantjo upg58667  320 Jan 23 16:04 file1
--rw-rw----. 1 grantjo upg58667   61 Jan 23 16:04 file2
--rw-rw----. 1 grantjo upg58667    3 Jan 23 16:04 file3
--rw-rw----. 1 grantjo upg58667    0 Jan 23 16:04 file4
--rw-rw----. 1 grantjo upg58667 6331 Jan 23 16:04 file5
--rwxr-x---. 1 grantjo upg58667 3880 Jan 23 16:04 stats
+total 0
+-rw-rw----. 1 grantjo upg58667  320 Jan 24 12:32 file1
+-rw-rw----. 1 grantjo upg58667   61 Jan 24 12:32 file2
+-rw-rw----. 1 grantjo upg58667    3 Jan 24 12:32 file3
+-rw-rw----. 1 grantjo upg58667    0 Jan 24 12:32 file4
+-rw-rw----. 1 grantjo upg58667 6331 Jan 24 12:32 file5
+-rwxrwx---. 1 grantjo upg58667 7777 Jan 24 12:32 stats
 
 ------------------------------------------------------------------------------------------------------
 File 1 Statistics by Rows: 1 point per correct number: 18
@@ -293,16 +293,16 @@ file3
 file4
 file5
 stats
-tmp22078
-tmp22078avg
-tmp22078curr
-tmp22078med
+tmp21754
+tmp21754avg
+tmp21754curr
+tmp21754med
 
   PID TTY          TIME CMD
  8168 pts/5    00:00:00 bash
- 8211 pts/5    00:00:00 p1gradingscript
-22078 pts/5    00:00:00 stats
-22497 pts/5    00:00:00 ps
+14019 pts/5    00:00:00 p1gradingscript
+21754 pts/5    00:00:00 stats
+21949 pts/5    00:00:00 ps
 
 
 After Kill: 8 points if no temp files
@@ -315,7 +315,7 @@ stats
 
   PID TTY          TIME CMD
  8168 pts/5    00:00:00 bash
- 8211 pts/5    00:00:00 p1gradingscript
-22528 pts/5    00:00:00 ps
+14019 pts/5    00:00:00 p1gradingscript
+21961 pts/5    00:00:00 ps
 
 

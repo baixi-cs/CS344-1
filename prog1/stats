@@ -108,58 +108,58 @@ get_median_file () {
 # Pre-Condition: information in file or stdin
 # Post-Condition: each row or col has its own temp file, # files returned
 create_temp_files () {
-    # if rows are specified
-	if [[ $1 == -r* ]]; then
-        # read each row of input into line
-		while read line; do
-            # loop over each value in the row and append to temp file
-            # for loop works for any whitespace delimination of the row
-			for num in $line; do 
-				echo $num >> "${TMP}curr"
-			done
-            # pass temp file to get_average_file and extract count from stdout
-			local count=$(get_average_file "${TMP}curr")
-            # pass temp file and count to get_median_file
-			get_median_file "${TMP}curr" $count
-            # delete temp file to get ready for the next column
-			rm -f "${TMP}curr"
-        # lines are read from file in $2 
-		done < $2
-        # print average and median values in row format
-        # Expects number of rows
-        print_rows $(wc -l < $2 )
+  # if rows are specified
+  if [[ $1 == -r* ]]; then
+    # read each row of input into line
+    while read line; do
+      # loop over each value in the row and append to temp file
+      # for loop works for any whitespace delimination of the row
+      for num in $line; do 
+        echo $num >> "${TMP}curr"
+      done
+      # pass temp file to get_average_file and extract count from stdout
+      local count=$(get_average_file "${TMP}curr")
+      # pass temp file and count to get_median_file
+      get_median_file "${TMP}curr" $count
+      # delete temp file to get ready for the next column
+      rm -f "${TMP}curr"
+      # lines are read from file in $2 
+    done < $2
+    # print average and median values in row format
+    # Expects number of rows
+    print_rows $(wc -l < $2 )
     # else if columns are specified
-	elif [[ $1 == -c* ]]; then
-        # get the length (in words) of the longest row, i.e. number of columns
-        #   explanation:
-        #     $(expand -t 1 $2 | wc -L) - capture expression, length of
-        #       longest line in chars. expand makes tabs count as 1 space to wc
-        #     egrep ".{num}" file - sends all rows with num lines to stdout
-        #     head -n 1 - returns first line of output
-        #     wc -w - returns count of words
-		colNum=$(egrep ".{$(expand -t 1 $2 | wc -L)}" $2 | head -n 1 | wc -w )
-        # loop over file colNum times extracting column $i from each line into a temp file
-		for (( i=1; i <= colNum; i++  )); do
-			while read line; do
-                # store column in val, expand replaces tabs with space allowing
-                # input to be deliminated by space or tab
-				local val=$(expand -t 1 <<< $line | cut -d$' ' -f$i )
-                # check that line actually has a column $i.
-                # cut has a nasty habit of returning the last char on a line if
-                # the exact column doesn't exist
-                [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
-			done < $2
-            # pass temp file to get_average_file and extract count from stdout
-			local count=$(get_average_file "${TMP}curr")
-            # pass temp file and count to get_median_file
-			get_median_file "${TMP}curr" $count
-            # delete temp file to get ready for the next column
-			rm -f "${TMP}curr"
-		done
-        # print average and median values in column format
-		print_columns
+  elif [[ $1 == -c* ]]; then
+    # get the length (in words) of the longest row, i.e. number of columns
+    #   explanation:
+    #     $(expand -t 1 $2 | wc -L) - capture expression, length of
+    #       longest line in chars. expand makes tabs count as 1 space to wc
+    #     egrep ".{num}" file - sends all rows with num lines to stdout
+    #     head -n 1 - returns first line of output
+    #     wc -w - returns count of words
+    colNum=$(egrep ".{$(expand -t 1 $2 | wc -L)}" $2 | head -n 1 | wc -w )
+    # loop over file colNum times extracting column $i from each line into a temp file
+    for (( i=1; i <= colNum; i++  )); do
+      while read line; do
+        # store column in val, expand replaces tabs with space allowing
+        # input to be deliminated by space or tab
+        local val=$(expand -t 1 <<< $line | cut -d$' ' -f$i )
+        # check that line actually has a column $i.
+        # cut has a nasty habit of returning the last char on a line if
+        # the exact column doesn't exist
+        [ $(wc -w <<< $line) -ge $i  ] && echo $val >> "${TMP}curr"
+      done < $2
+      # pass temp file to get_average_file and extract count from stdout
+      local count=$(get_average_file "${TMP}curr")
+      # pass temp file and count to get_median_file
+      get_median_file "${TMP}curr" $count
+      # delete temp file to get ready for the next column
+      rm -f "${TMP}curr"
+    done
+    # print average and median values in column format
+    print_columns
     # else print usage and exit 1
-	else print_usage_exit; fi
+  else print_usage_exit; fi
 }
 ######################### MAIN ENTRY POINT #############################
 # check for proper number of arguments, if incorrect print_usage_exit
