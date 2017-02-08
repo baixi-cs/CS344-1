@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #define MAX_OUT 6
 #define MIN_OUT 3
@@ -28,21 +28,21 @@ int main() {
   struct room rooms[NUM_ROOMS];
 
   char roomNames[10][11] = {
-    "El Dorado\0\0",
-    "ShangriLa\0\0",
-    "Thule\0\0\0\0\0\0",
-    "Cockaigne\0\0",
-    "Quivira\0\0\0\0",
-    "CanKaNoRey\0",
-    "Valinor\0\0\0\0",
-    "Camelot\0\0\0\0",
-    "Atlantis\0\0\0",
-    "Gilead\0\0\0\0\0"
+    "El Dorado",
+    "ShangriLa",
+    "Thule",
+    "Cockaigne",
+    "Quivira",
+    "CanKaNoRey",
+    "Valinor",
+    "Camelot",
+    "Atlantis",
+    "Gilead"
   },
       roomTypes[3][11] = {
-    "START_ROOM\0",
-    "MID_ROOM\0\0\0",
-    "END_ROOM\0\0\0"
+    "START_ROOM",
+    "MID_ROOM",
+    "END_ROOM"
   },
       folderName[20];
 
@@ -58,14 +58,17 @@ int main() {
       success = 0;
 
 
-  for ( ; i < NUM_ROOMS; i++ ) 
-    rooms[i].name = getRandomName((int*)&takenRoomNames,&takenRoomCount);
+  for (; i < NUM_ROOMS; i++) {
+	  rooms[i].name = getRandomName((int*)&takenRoomNames, &takenRoomCount);
+	  rooms[i].out_count = 0;
+	  rooms[i].room_type = -1;
+  }
 
   startroom = rand() % NUM_ROOMS;
   rooms[startroom].room_type = start;
 
   endroom = rand() % NUM_ROOMS;
-  while (endroom != startroom) { endroom = rand() % NUM_ROOMS; }
+  while (endroom == startroom) { endroom = rand() % NUM_ROOMS; }
   rooms[endroom].room_type = end;
 
   for (i = 0; i < NUM_ROOMS; i++)
@@ -79,23 +82,27 @@ int main() {
       connection -= rooms[i].out_count;
       for (j = 0; j < connection; j++) {
         startroom = rand() % NUM_ROOMS;
-        while (!contains(rooms[i].outgoing, rooms[i].out_count, startroom)) {
+        while (contains(rooms[i].outgoing, rooms[i].out_count, startroom) || startroom == rooms[i].name) {
           startroom = rand() % NUM_ROOMS;   
         }   
         rooms[i].outgoing[rooms[i].out_count++] = startroom;
-        rooms[startroom].outgoing[rooms[startroom].out_count++] = i;
+		if (!contains(rooms[startroom].outgoing, rooms[startroom].out_count, rooms[i].name) &&
+			rooms[startroom].name != rooms[i].name)
+			rooms[startroom].outgoing[rooms[startroom].out_count++] = rooms[i].name;
       }
     }
   }
 
+  sprintf(folderName, "grantjo.rooms.%d", (int)pid);
+  success = mkdir(folderName, 0755);
+
   for (i = 0; i < NUM_ROOMS; i++) {
     printf("%d) Room Name: %s\n", i+1, roomNames[rooms[i].name]);
-    for (j = 0; j < rooms[i].out_count; i++)
+    for (j = 0; j < rooms[i].out_count; j++)
       printf("CONNECTION %d: %s\n", j+1, roomNames[rooms[i].outgoing[j]]);
-    printf("ROOM TYPE: %s\n\n", rooms[i].room_type);
+    printf("ROOM TYPE: %s\n\n", roomTypes[rooms[i].room_type]);
   }
-  sprintf(folderName, "grantjo.rooms.%d", (int)pid);
-  //success = mkdir(folderName, 0755);
+  
   
   return 0;
 }
@@ -134,8 +141,8 @@ int contains(int *arr, int count, int val) {
   int i = 0;
   for (; i < count; i++)
     if (arr[i] == val)
-      return 0;
-  return 1;
+      return 1;
+  return 0;
 }
 
 int compare (const void *p1, const void *p2) {
