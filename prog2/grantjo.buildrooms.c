@@ -44,10 +44,10 @@ int main() {
     "MID_ROOM",
     "END_ROOM"
   },
-      folderName[20];
+      folderName[100];
 
   pid_t pid = getpid();
-  FILE handle;
+  FILE *outFile;
   int i = 0,
       j = 0,
       takenRoomNames[NUM_ROOMS],
@@ -82,25 +82,33 @@ int main() {
       connection -= rooms[i].out_count;
       for (j = 0; j < connection; j++) {
         startroom = rand() % NUM_ROOMS;
-        while (contains(rooms[i].outgoing, rooms[i].out_count, startroom) || startroom == rooms[i].name) {
+        while (contains(rooms[i].outgoing, rooms[i].out_count, rooms[startroom].name) || 
+            rooms[startroom].name == rooms[i].name) {
           startroom = rand() % NUM_ROOMS;   
         }   
-        rooms[i].outgoing[rooms[i].out_count++] = startroom;
-		if (!contains(rooms[startroom].outgoing, rooms[startroom].out_count, rooms[i].name) &&
-			rooms[startroom].name != rooms[i].name)
+        rooms[i].outgoing[rooms[i].out_count++] = rooms[startroom].name;
+		if (!contains(rooms[startroom].outgoing, rooms[startroom].out_count, rooms[i].name))
 			rooms[startroom].outgoing[rooms[startroom].out_count++] = rooms[i].name;
       }
     }
   }
 
   sprintf(folderName, "grantjo.rooms.%d", (int)pid);
-  success = mkdir(folderName, 0755);
-
+  mkdir(folderName, 0777);
   for (i = 0; i < NUM_ROOMS; i++) {
-    printf("%d) Room Name: %s\n", i+1, roomNames[rooms[i].name]);
-    for (j = 0; j < rooms[i].out_count; j++)
-      printf("CONNECTION %d: %s\n", j+1, roomNames[rooms[i].outgoing[j]]);
-    printf("ROOM TYPE: %s\n\n", roomTypes[rooms[i].room_type]);
+    sprintf(folderName, "./grantjo.rooms.%d/%s", (int)pid, roomNames[rooms[i].name]);
+    outFile = fopen(folderName, "w");
+
+    sprintf(folderName, "Room Name: %s\n", roomNames[rooms[i].name]);
+    fputs(folderName, outFile);
+    for (j = 0; j < rooms[i].out_count; j++) {
+      sprintf(folderName, "CONNECTION %d: %s\n", j+1, roomNames[rooms[i].outgoing[j]]);
+      fputs(folderName, outFile);
+    }
+    sprintf(folderName, "ROOM TYPE: %s\n", roomTypes[rooms[i].room_type]);
+    fputs(folderName, outFile);
+
+    fclose(outFile);
   }
   
   
