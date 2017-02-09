@@ -27,13 +27,13 @@ int main() {
 
   struct room rooms[NUM_ROOMS];
 
-  char roomNames[10][11] = {
+  char roomNames[10][15] = {
     "El Dorado",
-    "ShangriLa",
+    "Shangrila",
     "Thule",
     "Cockaigne",
     "Quivira",
-    "CanKaNoRey",
+    "Can'-Ka No Rey",
     "Valinor",
     "Camelot",
     "Atlantis",
@@ -44,7 +44,7 @@ int main() {
     "MID_ROOM",
     "END_ROOM"
   },
-      folderName[100];
+      fileBuffer[50];
 
   pid_t pid = getpid();
   FILE *outFile;
@@ -93,20 +93,20 @@ int main() {
     }
   }
 
-  sprintf(folderName, "grantjo.rooms.%d", (int)pid);
-  mkdir(folderName, 0777);
+  sprintf(fileBuffer, "grantjo.rooms.%d", (int)pid);
+  mkdir(fileBuffer, 0777);
   for (i = 0; i < NUM_ROOMS; i++) {
-    sprintf(folderName, "./grantjo.rooms.%d/%s", (int)pid, roomNames[rooms[i].name]);
-    outFile = fopen(folderName, "w");
+    sprintf(fileBuffer, "./grantjo.rooms.%d/%s", (int)pid, roomNames[rooms[i].name]);
+    outFile = fopen(fileBuffer, "w");
 
-    sprintf(folderName, "Room Name: %s\n", roomNames[rooms[i].name]);
-    fputs(folderName, outFile);
+    sprintf(fileBuffer, "ROOM NAME: %s\n", roomNames[rooms[i].name]);
+    fputs(fileBuffer, outFile);
     for (j = 0; j < rooms[i].out_count; j++) {
-      sprintf(folderName, "CONNECTION %d: %s\n", j+1, roomNames[rooms[i].outgoing[j]]);
-      fputs(folderName, outFile);
+      sprintf(fileBuffer, "CONNECTION %d: %s\n", j+1, roomNames[rooms[i].outgoing[j]]);
+      fputs(fileBuffer, outFile);
     }
-    sprintf(folderName, "ROOM TYPE: %s\n", roomTypes[rooms[i].room_type]);
-    fputs(folderName, outFile);
+    sprintf(fileBuffer, "ROOM TYPE: %s\n", roomTypes[rooms[i].room_type]);
+    fputs(fileBuffer, outFile);
 
     fclose(outFile);
   }
