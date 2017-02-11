@@ -20,10 +20,10 @@ enum room_type { start = 0, mid, end };
 
 int getRandomName(int takenNames[], int *count);
 int contains(int *arr, int count, int val); 
-int compare (const void *p1, const void *p2);
 
 int main() {
-  srand(time(NULL));
+  time_t t;
+  srand((unsigned)time(&t));
 
   struct room rooms[NUM_ROOMS];
 
@@ -153,13 +153,4 @@ int contains(int *arr, int count, int val) {
   return 0;
 }
 
-int compare (const void *p1, const void *p2) {
-  int int1 = *(int*)p1,
-      int2 = *(int*)p2;
-  if ( int1 > int2 )
-    return 1;
-  else if ( int1 < int2 )
-    return -1;
 
-  return 0;
-}

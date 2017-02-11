@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +12,9 @@
 #define MIN_OUT 3
 #define NUM_ROOMS 7
 
+pthread_mutex_t locks[2];
+pthread_t threads[2];
+
 struct room {
   char name[15];
   char outgoing[6][15];
@@ -20,12 +24,12 @@ struct room {
 
 enum room_type { start = 0, mid, end };
 
+void* doWriteTimeThread(void *close);
+void* doReadTimeThread(void *close);
 int getGameDir(const char *rootdir, char* buffer);
 int fillRooms(char *gamedir, struct room *rooms, int *start_room); 
 int indexofRoom(struct room *rooms, int count, char *val);
 int indexof(char names[6][15], int count, char *val);
-int contains(int *arr, int count, int val); 
-int compare (const void *p1, const void *p2);
 
 int main() {
   srand(time(NULL));
@@ -38,10 +42,35 @@ int main() {
       success = 0,
       current_room,
       rooms_visited[500],
-      visit_count = 0;
+      visit_count = 0,
+      close = 0;
+
   char buffer[50],
        *c;
 
+  for (i = 0; i < 2; i++) {
+    if(pthread_mutex_init(&locks[i], NULL) != 0){
+      printf("Failed to initialize mutex %d\n", i+1);
+      free(rooms);
+      return 1;
+    }
+    pthread_mutex_lock(&locks[i]);
+  }
+
+  success = pthread_create(&threads[0], NULL, &doWriteTimeThread, &close);
+  if (success != 0) {
+    printf("Failed to create thread: %s\n", strerror(success));
+    free(rooms);
+    return 1;
+  }
+
+  success = pthread_create(&threads[1], NULL, &doReadTimeThread, &close);
+  if (success != 0) {
+    printf("Failed to create thread: %s\n", strerror(success));
+    free(rooms);
+    return 1;
+  }
+  
   success = getGameDir("./", buffer);
   if (success == -1) {
     printf("No Room Directory!\n");
@@ -68,7 +97,15 @@ int main() {
     fgets(buffer, 50, stdin);
     c = strchr(buffer, '\n');
     *c = '\0';
-    if(indexof(rooms[current_room].outgoing, rooms[current_room].out_count, buffer) < 0) 
+    if (strcmp(buffer, "time") == 0) {
+      pthread_mutex_unlock(&locks[0]);
+      usleep(50);
+      pthread_mutex_lock(&locks[0]);
+      pthread_mutex_unlock(&locks[1]);
+      usleep(50);
+      pthread_mutex_lock(&locks[1]);
+    }
+    else if(indexof(rooms[current_room].outgoing, rooms[current_room].out_count, buffer) < 0) 
       printf("\nHUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
     else {
       success = indexofRoom(rooms, NUM_ROOMS, buffer);
@@ -79,17 +116,84 @@ int main() {
     }
 
   } while (rooms[current_room].room_type != end);
-  
-  printf("Much Success! You have made your way to the end!\n\n");
-  printf("Here was your path to greatness:\nStart: %s\n", rooms[rooms_visited[0]].name);
-  
-  for (i = 1; i < visit_count-1; i++)
-    printf("STEP %d: %s\n", i, rooms[rooms_visited[i]].name);
 
-  printf("FINALY, STEP %d: %s\n\nTHE END\n", visit_count-1, rooms[rooms_visited[i]].name);
+  printf("YOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
+  printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", visit_count-1);
+
+  for (i = 1; i < visit_count; i++)
+    printf("%s\n", rooms[rooms_visited[i]].name);
+  
+  close = 1;
+  pthread_mutex_unlock(&locks[0]);
+  pthread_mutex_unlock(&locks[1]);
+
+  for (i = 0; i < 2; i++)
+    if (pthread_join(threads[i], NULL) != 0)
+      perror("Failed Thread Join\n");
+
+  pthread_mutex_destroy(&locks[0]);
+  pthread_mutex_destroy(&locks[1]);
 
   free(rooms);
   return 0;
+}
+
+void* doWriteTimeThread(void *close) {
+  int *i_close = (int*)close;
+  char buffer[50];
+  time_t rawtime;
+  struct tm *timeinfo;
+  FILE *timeFile;
+  while (*i_close == 0) {
+    pthread_mutex_lock(&locks[0]);
+    if (*i_close == 1)
+      break;
+    timeFile = fopen("./currentTime.txt", "w");
+    if (timeFile == NULL) {
+      perror("Error\n");
+    } else {
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    strftime(buffer, 50, "%I:%M%p, %A, %B %d, %Y", timeinfo);
+    
+    buffer[5] = tolower(buffer[5]);
+    buffer[6] = tolower(buffer[6]);
+
+    if (timeinfo->tm_hour < 10 || (timeinfo->tm_hour > 12 && timeinfo->tm_hour < 22))
+      memmove(buffer, buffer+1, strlen(buffer));
+
+    fputs(buffer, timeFile);
+    fclose(timeFile);
+    }
+    pthread_mutex_unlock(&locks[0]);
+    usleep(50);
+  } 
+}
+
+void* doReadTimeThread(void *close) {
+  int *i_close = (int*) close;
+  char buffer[50];
+  FILE *timeFile;
+
+  while (*i_close == 0) {
+    pthread_mutex_lock(&locks[1]);
+    if (*i_close == 1)
+      break;
+    timeFile = fopen("./currentTime.txt", "r");
+    if (timeFile == NULL) {
+      perror("Error\n");
+    } else {
+
+    fgets(buffer, 50, timeFile);
+    
+    printf("\n%s\n\n", buffer);
+
+    fclose(timeFile);
+    }
+
+    pthread_mutex_unlock(&locks[1]);
+    usleep(50);
+  } 
 }
 
 int getGameDir(const char *rootdir, char *buffer) {
@@ -125,7 +229,7 @@ int fillRooms(char *gamedir, struct room *rooms, int *start_room) {
   char *c;
   int i = 0,
       room_count = 0;
-  
+
   for (; i < NUM_ROOMS; i++)
     rooms[i].out_count = 0;
   dir = opendir(gamedir);
@@ -185,21 +289,4 @@ int indexof(char names[6][15], int count, char *val) {
   return -1;
 }
 
-int contains(int *arr, int count, int val) {
-  int i = 0;
-  for (; i < count; i++)
-    if (arr[i] == val)
-      return 1;
-  return 0;
-}
 
-int compare (const void *p1, const void *p2) {
-  int int1 = *(int*)p1,
-      int2 = *(int*)p2;
-  if ( int1 > int2 )
-    return 1;
-  else if ( int1 < int2 )
-    return -1;
-
-  return 0;
-}
