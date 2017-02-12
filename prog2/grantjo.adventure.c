@@ -36,7 +36,7 @@ void* doReadTimeThread(void *close);
 int getGameDir(const char *rootdir, char* buffer);
 int fillRooms(const char *gamedir, struct room *rooms, int *start_room);
 int indexofRoom(const struct room *rooms, int count, const char *val);
-int indexof(const char names[6][15], int count, const char *val);
+int indexof(char names[6][15], int count, const char *val);
 
 // MAIN FUNCTION
 int main() {
@@ -419,7 +419,7 @@ int indexofRoom(const struct room *rooms, int count, const char *val) {
  ** Preconditions: array of struct rooms filled
  ** Postconditions: No change to game state
  *******************************************************************************/
-int indexof(const char names[6][15], int count, const char *val) {
+int indexof(char names[6][15], int count, const char *val) {
   int i = 0;
   for (; i < count; i++)
     if (strcmp(names[i], val) == 0)
