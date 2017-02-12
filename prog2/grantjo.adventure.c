@@ -298,7 +298,7 @@ int getGameDir(const char *rootdir, char *buffer) {
     return -1;
   }
   // read each directory entry
-  while (dirEnt = readdir(dir)) {
+  while ((dirEnt = readdir(dir))) {
     // check if name begins with grantjo.room
     if (strncmp(dirEnt->d_name, "grantjo.room", 12) == 0) {
       // get stats of directory
@@ -346,7 +346,7 @@ int fillRooms(const char *gamedir, struct room *rooms, int *start_room) {
     return -1;
   } 
   // read each file's information into a dir entry
-  while (dirEnt = readdir(dir)) {
+  while ((dirEnt = readdir(dir))) {
     // ignore current and parent directory entries
     if (strlen(dirEnt->d_name) > 2){
       // store relative path from executing directory to file in buffer

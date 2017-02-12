@@ -62,8 +62,7 @@ int main() {
       takenRoomCount = 0,         // count of rooms already taken
       endroom,                    // store random index of endroom
       startroom,                  // store random index of startroom
-      connection,                 //
-      success = 0;                // store return values of functions
+      connection;                 //
 
   // initialize name, out_count, and room_type
   for (; i < NUM_ROOMS; i++) {
@@ -166,8 +165,7 @@ int main() {
  *******************************************************************************/
 int getRandomName(int takenNames[], int *count) {
   int random,
-      found,
-      i;
+      found;
   // if no name is taken create random index, add to takenNames and return.
   if (count == 0) {
     takenNames[(*count)++] = rand() % 10;

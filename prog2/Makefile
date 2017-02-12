@@ -1,23 +1,20 @@
-CFLAGS = -Wall
-COVFLAG = -coverage -fpic -lm
+TEST_FLAGS = -Wall -coverage -fpic -lm -g
 
 all: grantjo.adventure grantjo.buildrooms
 	
+test: tadv tbuild
 
 grantjo.adventure: grantjo.adventure.c
-	gcc -o grantjo.adventure grantjo.adventure.c -g  $(CFLAGS) -lpthread
+	gcc -o grantjo.adventure grantjo.adventure.c  -lpthread
 
 grantjo.buildrooms: grantjo.buildrooms.c 
-	gcc -o grantjo.buildrooms grantjo.buildrooms.c -g  $(CFLAGS)
+	gcc -o grantjo.buildrooms grantjo.buildrooms.c
 
-grantjo.adventure-cov: grantjo.adventure.c
-	gcc -o grantjo.adventure-cov grantjo.adventure.c -g  $(CFLAGS) $(COFLAGS) -lpthread
+tadv: grantjo.adventure.c
+	gcc -o tadv grantjo.adventure.c  $(TEST_FLAGS) -lpthread
 
-grantjo.buildrooms-cov: grantjo.buildrooms.c 
-	gcc -o grantjo.buildrooms-cov grantjo.buildrooms.c -g  $(CFLAGS) $(COFLAGS)
-
-
-all: playdom player testDrawCard testCardBuy badTestDrawCard testGetCost testGetWinners unittest4
+tbuild: grantjo.buildrooms.c 
+	gcc -o tbuild grantjo.buildrooms.c  $(TEST_FLAGS)
 
 clean:
-	rm -rf grantjo.rooms* grantjo.buildrooms grantjo.adventure grantjo.adventure-cov grantjo.buildrooms-cov *.o *.gcov *.gcda *.gcno *.so
+	rm -rf currentTime.txt grantjo.rooms* grantjo.buildrooms grantjo.adventure tadv tbuild *.o *.gcov *.gcda *.gcno *.so
