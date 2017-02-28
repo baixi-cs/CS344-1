@@ -26,6 +26,7 @@ int compare(TYPE left, TYPE right);
 void initDynArr(DynArr *v, int capacity);	
 DynArr *createDynArr(int cap);
 
+void clearDynArr(DynArr *v);
 void freeDynArr(DynArr *v);
 void deleteDynArr(DynArr *v);
 
@@ -45,6 +46,7 @@ void popDynArr(DynArr *v);
 
 /* Bag Interface */	
 int containsDynArr(DynArr *v, TYPE val);
+int indexOfDynArr(DynArr *v, TYPE val);
 void removeDynArr(DynArr *v, TYPE val);
 
 /* Deque Interface */

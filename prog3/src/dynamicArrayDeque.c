@@ -70,6 +70,14 @@ DynArr* createDynArr(int cap)
 	return r;
 }
 
+void clearDynArr(DynArr *v) {
+  int i = 0;
+  for (; i < v->size; i++) 
+    free(v->data[_physicalIndex(v,i)]);
+  v->size = 0;
+  v->beg = 0;
+}
+
 /* Deallocate data array in dynamic array. 
 
 	param: 	v		pointer to the dynamic array
@@ -81,9 +89,8 @@ DynArr* createDynArr(int cap)
 void freeDynArr(DynArr *v)
 {
 	if(v->data != 0)
-	{   int i = 0;
-		for (i = 0; i < v->size; i++)
-			free(v->data[_physicalIndex(v,i)]);
+	{
+        clearDynArr(v);
 		free(v->data); 	/* free the space on the heap */
 		v->data = 0;   	/* make it point to null */
 	}
@@ -182,8 +189,8 @@ void addDynArr(DynArr *v, TYPE val, int size)
 TYPE getDynArr(DynArr *v, int pos)
 {
 
-   if (pos >= v->size || pos < 0)
-     return NULL;
+   if (pos >= v->size || pos < 0 || sizeDynArr(v) <= pos)
+       return NULL;
    
    return v->data[_physicalIndex(v, pos)];
 }
@@ -356,6 +363,16 @@ int containsDynArr(DynArr *v, TYPE val)
       if(compare(v->data[_physicalIndex(v,i)], val) == 0 )
          return 1;
       return 0;
+
+}
+
+int indexOfDynArr(DynArr *v, TYPE val) 
+{
+    int i = 0;
+	for(i = 0; i < sizeDynArr(v); i++)
+      if(compare(v->data[_physicalIndex(v,i)], val) == 0 )
+         return i;
+      return -1;
 
 }
 

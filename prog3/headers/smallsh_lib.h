@@ -4,4 +4,6 @@
 #include "dynamicArrayDeque.h"
 #include "smallsh_functions.h"
 
+#define MAX_HISTORY 20
+
 #endif
