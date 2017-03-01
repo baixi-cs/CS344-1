@@ -7,27 +7,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include <unistd.h>
-#include "headers/dynamicArrayDeque.h"
-
-#define MAX_HIST 20
+#include "./headers/dynamicArrayDeque.h"
+#include "./headers/dynamicArray.h"
 
 struct status_flags 
 {
   int status;
   int is_sig;
-}
+};
 
-void handle_SIGINT(int signo);
-void handle_SIGSTP(int signo);
+
 // BOTH HANDLE FG and GB return pid of child
-int handle_fg(DynArr *parts);
-int handle_bg(DynArr *parts);
+pid_t handle_fg(DynArr *parts, void (*handle_int)(int));
+pid_t handle_bg(DynArr *parts);
+void redirect_in(DynArr *parts, int default_null);
+void redirect_out(DynArr *parts, int default_null);
+char** fill_exec_args(DynArr *parts);
+void free_args_at_exit(int status, void *args);
+struct status_flags get_exit_sig(int child_exit);
 int parse_command(char *str, DynArr *parts, int *is_back);
 int string_split(char *str, DynArr *deq, char delim);
 int change_dir(char *path);
 void get_status(int status, int is_sig);
 int indexOf(char *str, char val);
 int trim_string(char *out, int size, char *str);
-
 #endif

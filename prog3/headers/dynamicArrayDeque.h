@@ -19,6 +19,8 @@ typedef struct DynArr DynArr;
 int _physicalIndex (DynArr *v , int idx);
 #endif
 
+void printDynArr(DynArr *v);
+
 /* function used to compare two TYPE values to each other, define this in your compare.c file */
 int compare(TYPE left, TYPE right);
 
