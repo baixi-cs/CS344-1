@@ -5,7 +5,8 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
                    SIGTSTP_action = {{0}}; 
-  int success;
+  int success,
+      i;
   spawn_pid = fork();
 
   switch(spawn_pid) {
@@ -31,9 +32,15 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
      if (success == -1) 
         exit(1);
           
-      parts->data[sizeDynArr(parts)] = NULL;
+      args = malloc(sizeof(char*) * sizeDynArr(parts));
+      for (i = 0; i < sizeDynArr(parts); i++) {
+        char *buffer = getDynArr(parts, i);
+        args[i] = malloc(sizeof(char) * strlen(buffer));
+        strcpy(args[i], buffer);
+      } 
+      args[i] = NULL;
       
-      execvp(parts->data[0], parts->data);
+      execvp(args[0], args);
       fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
       break;
@@ -50,7 +57,8 @@ int handle_bg(DynArr *parts) {
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
                    SIGTSTP_action = {{0}}; 
-  int success;
+  int success,
+      i;
   spawn_pid = fork();
 
   switch(spawn_pid) {
@@ -73,9 +81,15 @@ int handle_bg(DynArr *parts) {
       if (success == -1) 
         exit(1);
       
-      parts->data[sizeDynArr(parts)] = NULL;
-
-      execvp(parts->data[0], parts->data);
+      args = malloc(sizeof(char*) * sizeDynArr(parts));
+      for (i = 0; i < sizeDynArr(parts); i++) {
+        char *buffer = getDynArr(parts, i);
+        args[i] = malloc(sizeof(char) * strlen(buffer));
+        strcpy(args[i], buffer);
+      } 
+      args[i] = NULL;
+      
+      execvp(args[0], args);
       exit(1);
       break;
     default:
