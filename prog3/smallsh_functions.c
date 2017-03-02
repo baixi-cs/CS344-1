@@ -5,11 +5,12 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
                    SIGTSTP_action = {{0}}; 
+  int success;
   spawn_pid = fork();
 
   switch(spawn_pid) {
     case -1:
-      perror("Fatal Error:\n"); 
+      perror("Fatal Error"); 
       exit(1);
       break;
     case 0:
@@ -22,14 +23,20 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
       sigaction(SIGINT, &SIGINT_action, NULL);
       sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
-      redirect_in(parts, 0);
-      redirect_out(parts, 0);
-      args = fill_exec_args(parts);
+      success = redirect_in(parts, 0);
+      if (success == -1) 
+        exit(1);
+      
+      success = redirect_out(parts, 0);
+     if (success == -1) 
+        exit(1);
+          
+     args = fill_exec_args(parts);
 
       on_exit(&free_args_at_exit, &args);
 
       execvp(args[0], args);
-      perror("exec failure:\n");
+      fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
       break;
     default:
@@ -45,11 +52,12 @@ int handle_bg(DynArr *parts) {
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
                    SIGTSTP_action = {{0}}; 
+  int success;
   spawn_pid = fork();
 
   switch(spawn_pid) {
     case -1:
-      perror("Fatal Error:\n"); 
+      perror("Fatal Error"); 
       exit(1);
       break;
     case 0:
@@ -59,14 +67,20 @@ int handle_bg(DynArr *parts) {
       sigaction(SIGINT, &SIGINT_action, NULL);
       sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
-      redirect_in(parts, 1);
-      redirect_out(parts, 1);
+      success = redirect_in(parts, 1);
+      if (success == -1) 
+        exit(1);
+      
+      success = redirect_out(parts, 1);
+      if (success == -1) 
+        exit(1);
+      
       args = fill_exec_args(parts);
 
       on_exit(&free_args_at_exit, &args);
 
       execvp(args[0], args);
-      perror("exec failure:\n");
+      fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
       break;
     default:
@@ -77,13 +91,15 @@ int handle_bg(DynArr *parts) {
   return spawn_pid;
 }
 
-void redirect_in(DynArr *parts, int default_null) {
+int redirect_in(DynArr *parts, int default_null) {
   int index = indexOfDynArr(parts, "<");
   int file_desc;
   if (index != -1 && index < sizeDynArr(parts)-1) {
     file_desc = open(getDynArr(parts,index + 1), O_RDONLY);
-    if (file_desc == -1)
-      return;
+    if (file_desc == -1) {
+      fprintf(stderr, "cannot open %s for input: %s\n", getDynArr(parts, index+1), strerror(errno));
+      return -1;
+    }
     dup2(file_desc, 0);
     removeAtDynArr(parts, index);
     removeAtDynArr(parts, index);
@@ -93,20 +109,25 @@ void redirect_in(DynArr *parts, int default_null) {
       removeAtDynArr(parts,index);
     if (default_null) {
       file_desc = open("/dev/null", O_RDONLY);
-      if (file_desc == -1)
-        return;
+      if (file_desc == -1) {
+        fprintf(stderr, "cannot open %s for input: %s\n", "/dev/null", strerror(errno));
+        return -1;
+      }
       dup2(file_desc, 0);
     }
   }
+  return 0;
 }
 
-void redirect_out(DynArr *parts, int default_null) {
+int redirect_out(DynArr *parts, int default_null) {
   int index = indexOfDynArr(parts, ">");
   int file_desc;
   if (index != -1 && index < sizeDynArr(parts)-1) {
     file_desc = open(getDynArr(parts, index + 1), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (file_desc == -1)
-      return;
+    if (file_desc == -1) {
+      fprintf(stderr, "cannot open %s for output: %s\n", getDynArr(parts, index+1), strerror(errno));
+      return -1;
+    }
     dup2(file_desc, 1);
     removeAtDynArr(parts, index);
     removeAtDynArr(parts, index);
@@ -116,11 +137,14 @@ void redirect_out(DynArr *parts, int default_null) {
       removeAtDynArr(parts,index);
     if (default_null) {
       file_desc = open("/dev/null", O_WRONLY);
-      if (file_desc == -1)
-        return;
+      if (file_desc == -1) {
+        fprintf(stderr, "cannot open %s for output: %s\n", "/dev/null", strerror(errno));
+        return -1;
+      }
       dup2(file_desc, 1);
     }
   }
+  return 0;
 }
 
 char** fill_exec_args(DynArr *parts) {
@@ -198,7 +222,12 @@ int string_split(char *str, DynArr *deq, char delim) {
       *c = 0;
     else
       buffer_size += 1;
-
+    if (strcmp(buffer, "$$") == 0) {
+      free(buffer); buffer = NULL;
+      int shell_pid = (int)getpid();
+      buffer = malloc(sizeof(char) * (num_digits(shell_pid)+1));
+      sprintf(buffer, "%d", shell_pid);
+    }
     addBackDynArr(deq, buffer, buffer_size);
 
     free(buffer);
@@ -209,6 +238,10 @@ int string_split(char *str, DynArr *deq, char delim) {
   return 0;
 }
 
+int num_digits( int pid ) {
+  return (pid < 10) ? 1 : 1 + num_digits(pid / 10);
+}
+
 int change_dir(char *path) {
   int success;
   if (path == NULL)
@@ -217,15 +250,29 @@ int change_dir(char *path) {
     success = chdir(path);
   if (success < 0) {
     printf("Error: %s\n", strerror(errno));
-    return -1;
+    return 1;
   }
   return 0;
 }
 
-void get_status(int status_flag, int is_sig) {
-  if (status_flag == -5 && is_sig == -5)
-    printf("No command has been executed");
+void exit_kill(Arr *pids) {
+  int i = 0,
+      child_exit = 0;
+  pid_t curr_pid;
+  for (; i < sizeArr(pids); i++) {
+    curr_pid = (pid_t)getArr(pids, i);
+    kill(curr_pid, SIGKILL);
+    waitpid(curr_pid, &child_exit, 0);
+    removeArr(pids, (int)curr_pid);
+  }
+}
 
+void get_status(int status_flag, int is_sig) {
+  if (status_flag == -5 && is_sig == -5) {
+    printf("No command has been executed\n");
+    return;
+  }
+  
   if(is_sig)
     printf("terminated by signal %d\n", status_flag);
   else

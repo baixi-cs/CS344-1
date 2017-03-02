@@ -54,7 +54,8 @@ int main() {
       is_background = 0,
       trim_size,
       built_in,
-      child_exit = -5;
+      child_exit = -5,
+      i;
 
   pid_t child_pid = -5;
   struct status_flags status_flag;
@@ -103,6 +104,7 @@ int main() {
           status_flag.is_sig = 0;
           break;
         case EXIT:
+          exit_kill(bg_pids);
           exit_flag = 1;
           break;
         case STATUS:
@@ -116,7 +118,9 @@ int main() {
       if (!is_background || forg) {
         child_pid = handle_fg(ind_command, &handle_SIGINT);
         child_pid = waitpid(child_pid, &child_exit, 0);
-        status_flag = get_exit_sig(child_exit);   
+        status_flag = get_exit_sig(child_exit);  
+        if (status_flag.is_sig) 
+          printf("terminated by signal %d\n", status_flag.status); 
       } 
       else {
         child_pid = handle_bg(ind_command);
@@ -126,14 +130,19 @@ int main() {
     }
 
     if (!isEmptyArr(bg_pids)) {
-      int i = 0;
-      for (; i < sizeArr(bg_pids); i++) {   
+      for (i = 0; i < sizeArr(bg_pids); i++) {   
         pid_t temp = waitpid((pid_t)getArr(bg_pids, i), &child_exit, WNOHANG);
         if (temp != 0) {
           struct status_flags stat = get_exit_sig(child_exit);
           printf("Background pid %d is done: %s %d\n", (int)temp,
               (stat.is_sig) ? "terminated by signal " : "exit status ", stat.status);
           removeArr(bg_pids, getArr(bg_pids,i));
+          i--;
+        }
+        else {
+          fprintf(stderr, "Background pid %d exited\n", getArr(bg_pids, i));
+          removeArr(bg_pids, getArr(bg_pids, i));
+          i--;
         }
       }
     }
