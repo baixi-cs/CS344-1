@@ -31,9 +31,9 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
      if (success == -1) 
         exit(1);
           
-     args = fill_exec_args(parts);
-
-      execvp(args[0], args);
+      parts->data[sizeDynArr(parts)] = NULL;
+      
+      execvp(parts->data[0], parts->data);
       fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
       break;
@@ -73,10 +73,9 @@ int handle_bg(DynArr *parts) {
       if (success == -1) 
         exit(1);
       
-      args = fill_exec_args(parts);
+      parts->data[sizeDynArr(parts)] = NULL;
 
-      execvp(args[0], args);
-      fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
+      execvp(parts->data[0], parts->data);
       exit(1);
       break;
     default:
@@ -159,7 +158,6 @@ char** fill_exec_args(DynArr *parts) {
   for (i = 0; i < end; i++) {
     buffer = getDynArr(parts, i);
     args[i] = malloc(sizeof(char) * (strlen(buffer)+1));
-
     strcpy(args[i], buffer);
   }
   args[i] = NULL;

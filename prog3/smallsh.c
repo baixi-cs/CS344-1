@@ -76,7 +76,7 @@ int main() {
       sigstop = 0;
       continue;
     }
-
+    
     if ((c = strchr(buffer, '\n')) != NULL)
       *c = 0;
     // readline(buffer, &buffer_capacity, ": ", history);
@@ -93,11 +93,8 @@ int main() {
       buffer_capacity = 0;
       continue;
     }
-    //if (sizeDynArr(history) == MAX_HIST)
-    //  removeFrontDynArr(history);
-    //addBackDynArr(history, trimmed, trim_size);
+    
     parse_command(trimmed, ind_command, &is_background);
-
     if ((built_in = indexOfDynArr(commands, frontDynArr(ind_command))) != -1) {
       switch (built_in) {
         case CD:
