@@ -33,8 +33,6 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
           
      args = fill_exec_args(parts);
 
-      on_exit(&free_args_at_exit, &args);
-
       execvp(args[0], args);
       fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
@@ -76,8 +74,6 @@ int handle_bg(DynArr *parts) {
         exit(1);
       
       args = fill_exec_args(parts);
-
-      on_exit(&free_args_at_exit, &args);
 
       execvp(args[0], args);
       fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
@@ -170,16 +166,6 @@ char** fill_exec_args(DynArr *parts) {
   return args;
 }
 
-void free_args_at_exit(int status, void *args_void) {
-  char **args = *((char ***)args_void);
-  int i = 0;
-  while (args[i] != NULL) {
-    free(args[i]);
-    i++;
-  }
-  free(args);
-}
-
 struct status_flags get_exit_sig(int child_exit) {
   struct status_flags status_flag;
   if (WIFEXITED(child_exit) != 0) {
@@ -222,11 +208,15 @@ int string_split(char *str, DynArr *deq, char delim) {
       *c = 0;
     else
       buffer_size += 1;
-    if (strcmp(buffer, "$$") == 0) {
-      free(buffer); buffer = NULL;
-      int shell_pid = (int)getpid();
-      buffer = malloc(sizeof(char) * (num_digits(shell_pid)+1));
-      sprintf(buffer, "%d", shell_pid);
+    if ((c = strstr(buffer, "$$")) != NULL) {
+      int shell_pid = (int)getpid(),
+          pid_len = num_digits(shell_pid);
+      char *buff2 = malloc(sizeof(char) * strlen(buffer));
+      *c = 0;
+      strcpy(buff2, buffer);
+      free(buffer);
+      buffer = malloc((strlen(buff2) + pid_len) * sizeof(char));
+      sprintf(buffer, "%s%d", buff2, shell_pid);
     }
     addBackDynArr(deq, buffer, buffer_size);
 

@@ -69,7 +69,8 @@ int main() {
     printf(": ");
     fflush(stdout);
     buffer_size = getline(&buffer, &buffer_capacity, stdin);
-
+    if (sigstop && buffer_size != -1)
+      sigstop = 0;
     if (sigstop) {
       clearerr(stdin);
       sigstop = 0;
@@ -137,11 +138,6 @@ int main() {
           printf("Background pid %d is done: %s %d\n", (int)temp,
               (stat.is_sig) ? "terminated by signal " : "exit status ", stat.status);
           removeArr(bg_pids, getArr(bg_pids,i));
-          i--;
-        }
-        else {
-          fprintf(stderr, "Background pid %d exited\n", getArr(bg_pids, i));
-          removeArr(bg_pids, getArr(bg_pids, i));
           i--;
         }
       }

@@ -28,7 +28,6 @@ pid_t handle_bg(DynArr *parts);
 int redirect_in(DynArr *parts, int default_null);
 int redirect_out(DynArr *parts, int default_null);
 char** fill_exec_args(DynArr *parts);
-void free_args_at_exit(int status, void *args);
 struct status_flags get_exit_sig(int child_exit);
 int parse_command(char *str, DynArr *parts, int *is_back);
 int string_split(char *str, DynArr *deq, char delim);
