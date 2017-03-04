@@ -220,6 +220,7 @@ int string_split(char *str, DynArr *deq, char delim) {
       *c = 0;
     else
       buffer_size += 1;
+    
     if ((c = strstr(buffer, "$$")) != NULL) {
       int shell_pid = (int)getpid(),
           pid_len = num_digits(shell_pid);
@@ -229,13 +230,18 @@ int string_split(char *str, DynArr *deq, char delim) {
       free(buffer);
       buffer = malloc((strlen(buff2) + pid_len) * sizeof(char));
       sprintf(buffer, "%s%d", buff2, shell_pid);
+      free(buff2);
+      buff2 = NULL;
     }
+
     addBackDynArr(deq, buffer, buffer_size);
 
     free(buffer);
     buffer = NULL;
     buffer_cap = 0;
   }
+  free(buffer);
+
   fclose(stream);
   return 0;
 }

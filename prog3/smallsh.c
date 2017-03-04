@@ -10,16 +10,15 @@ void handle_SIGINT(int signo) {
 
 void handle_SIGTSTP(int signo) {
   if (!forg) {
-    char *message = "\nEntering foreground-only mode (& is now ignored)\n";
+    char *message = "\nEntering foreground-only mode (& is now ignored)\n: ";
     write(STDOUT_FILENO, message, strlen(message));
     forg = 1;
   }
   else {
-    char *message = "\nExiting foreground-only mode\n";
+    char *message = "\nExiting foreground-only mode\n: ";
     write(STDOUT_FILENO, message, strlen(message));
     forg = 0;
   }
-  sigstop = 1; 
 }
 
 int main() {
@@ -32,7 +31,7 @@ int main() {
 
   SIGTSTP_action.sa_handler = handle_SIGTSTP;
   sigfillset(&SIGTSTP_action.sa_mask);
-  SIGTSTP_action.sa_flags = 0;
+  SIGTSTP_action.sa_flags = SA_RESTART;
 
   sigaction(SIGINT, &SIGINT_action, NULL);
   sigaction(SIGTSTP, &SIGTSTP_action, NULL);
@@ -69,13 +68,6 @@ int main() {
     printf(": ");
     fflush(stdout);
     buffer_size = getline(&buffer, &buffer_capacity, stdin);
-    if (sigstop && buffer_size != -1)
-      sigstop = 0;
-    if (sigstop) {
-      clearerr(stdin);
-      sigstop = 0;
-      continue;
-    }
     
     if ((c = strchr(buffer, '\n')) != NULL)
       *c = 0;
@@ -148,6 +140,7 @@ int main() {
 
   } while ( !exit_flag );
 
+  deleteArr(bg_pids);
   deleteDynArr(ind_command);
   deleteDynArr(commands);
   //deleteDynArr(history);
