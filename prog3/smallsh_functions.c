@@ -1,17 +1,33 @@
+/*******************************************************************************
+** smallsh_functions.c
+** Description: primary function library for smallsh
+** Author: Jordan Grant (grantjo)
+*******************************************************************************/
 #include "smallsh_functions.h"
 
+/*******************************************************************************
+** Function:    handle_fg
+** Arguments:   DynArr of command parts(see src/dynamicArrayDeque.c),
+**              pointer to SIGINT handler
+** Description: forks a child process, registers childs signal handlers,
+**              performs necessary redirection of stdin and stdout, and calls
+**              execvp to run command. Handles execvp error if it returns
+** Pre-conditions:  command has been tokenized into DynArr and is not built in
+** Post-conditions: child process replaced by command process or execvp error
+**                  is handled. pid of child is returned
+*******************************************************************************/
 pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
   pid_t spawn_pid = -5;
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
-                   SIGTSTP_action = {{0}}; 
+                   SIGTSTP_action = {{0}};
   int success,
       i;
   spawn_pid = fork();
 
   switch(spawn_pid) {
     case -1:
-      perror("Fatal Error"); 
+      perror("Fatal Error");
       exit(1);
       break;
     case 0:
@@ -25,45 +41,54 @@ pid_t handle_fg(DynArr *parts, void (*handle_int)(int)) {
       sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
       success = redirect_in(parts, 0);
-      if (success == -1) 
+      if (success == -1)
         exit(1);
-      
+
       success = redirect_out(parts, 0);
-     if (success == -1) 
+     if (success == -1)
         exit(1);
-          
+
       args = malloc(sizeof(char*) * sizeDynArr(parts));
       for (i = 0; i < sizeDynArr(parts); i++) {
         char *buffer = getDynArr(parts, i);
         args[i] = malloc(sizeof(char) * strlen(buffer));
         strcpy(args[i], buffer);
-      } 
+      }
       args[i] = NULL;
-      
+
       execvp(args[0], args);
       fprintf(stderr, "%s: %s\n", args[0], strerror(errno));
       exit(1);
       break;
     default:
-
       break;
   }
-
   return spawn_pid;
 }
 
+/*******************************************************************************
+** Function:    handle_bg
+** Arguments:   DynArr of command parts(see src/dynamicArrayDeque.c)
+** Description: forks a child process, registers childs signal handlers,
+**              performs necessary redirection of stdin/out or redirects to
+**              /dev/null, and calls execvp to run command. Handles execvp error
+**              if it returns
+** Pre-conditions:  command has been tokenized into DynArr and is not built in
+** Post-conditions: child process replaced by command process or execvp error
+**                  is handled. pid of child is returned
+*******************************************************************************/
 int handle_bg(DynArr *parts) {
   pid_t spawn_pid = -5;
   char **args = NULL;
   struct sigaction SIGINT_action = {{0}},
-                   SIGTSTP_action = {{0}}; 
+                   SIGTSTP_action = {{0}};
   int success,
       i;
   spawn_pid = fork();
 
   switch(spawn_pid) {
     case -1:
-      perror("Fatal Error"); 
+      perror("Fatal Error");
       exit(1);
       break;
     case 0:
@@ -74,21 +99,21 @@ int handle_bg(DynArr *parts) {
       sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
       success = redirect_in(parts, 1);
-      if (success == -1) 
+      if (success == -1)
         exit(1);
-      
+
       success = redirect_out(parts, 1);
-      if (success == -1) 
+      if (success == -1)
         exit(1);
-      
+
       args = malloc(sizeof(char*) * sizeDynArr(parts));
       for (i = 0; i < sizeDynArr(parts); i++) {
         char *buffer = getDynArr(parts, i);
         args[i] = malloc(sizeof(char) * strlen(buffer));
         strcpy(args[i], buffer);
-      } 
+      }
       args[i] = NULL;
-      
+
       execvp(args[0], args);
       exit(1);
       break;
@@ -100,6 +125,18 @@ int handle_bg(DynArr *parts) {
   return spawn_pid;
 }
 
+/*******************************************************************************
+** Function:    redirect_in
+** Arguments:   DynArr of command parts(see src/dynamicArrayDeque.c),
+                flag to determine if stdin should point to null if no direct
+                redirect specified.
+** Description: checks if input should be redirected. If so it opens the file
+**              and performs the redirection, If not and default_null is set
+**              it opens /dev/null and redirects, else no redirection is made
+** Pre-conditions:  command has been tokenized into DynArr and is not built in
+** Post-conditions: child process stdin is redirected to the specified file,
+**                  /dev/null, or remains unchanged
+*******************************************************************************/
 int redirect_in(DynArr *parts, int default_null) {
   int index = indexOfDynArr(parts, "<");
   int file_desc;
@@ -127,7 +164,18 @@ int redirect_in(DynArr *parts, int default_null) {
   }
   return 0;
 }
-
+/*******************************************************************************
+** Function:    redirect_out
+** Arguments:   DynArr of command parts(see src/dynamicArrayDeque.c),
+**              flag to determine if stdout should point to null if no direct
+**              redirect specified.
+** Description: checks if output should be redirected. If so it opens the file
+**              and performs the redirection, If not and default_null is set
+**              it opens /dev/null and redirects, else no redirection is made
+** Pre-conditions:  command has been tokenized into DynArr and is not built in
+** Post-conditions: child process stdout is redirected to the specified file,
+**                  /dev/null, or remains unchanged
+*******************************************************************************/
 int redirect_out(DynArr *parts, int default_null) {
   int index = indexOfDynArr(parts, ">");
   int file_desc;
@@ -155,7 +203,7 @@ int redirect_out(DynArr *parts, int default_null) {
   }
   return 0;
 }
-
+/*
 char** fill_exec_args(DynArr *parts) {
   int in = indexOfDynArr(parts, "<"),
       out = indexOfDynArr(parts, ">"),
@@ -176,8 +224,18 @@ char** fill_exec_args(DynArr *parts) {
   }
   args[i] = NULL;
   return args;
-}
+}*/
 
+/*******************************************************************************
+** Function:    get_exit_sig
+** Arguments:   integer value of child exit status
+** Description: checks if input should be redirected. If so it opens the file
+**              and performs the redirection, If not and default_null is set
+**              it opens /dev/null and redirects, else no redirection is made
+** Pre-conditions:  waitpid returns non-zero
+** Post-conditions: returns exit status or terminating signal
+**                  in struct status_flags
+*******************************************************************************/
 struct status_flags get_exit_sig(int child_exit) {
   struct status_flags status_flag;
   if (WIFEXITED(child_exit) != 0) {
@@ -190,11 +248,21 @@ struct status_flags get_exit_sig(int child_exit) {
   return status_flag;
 }
 
+/*******************************************************************************
+** Function:    parse_command
+** Arguments:   buffer containing user input,
+**              DynArr into which to tokenize the command,
+**              int flag to represent if command should be background
+** Description: splits buffer by word (space) into DynArr and checks if the last
+**              word is '&'. If so, it sets the is_back flag and removes &
+** Pre-conditions:  command is not blank or a comment
+** Post-conditions: command exists in DynArr, less bg signal if present
+*******************************************************************************/
 int parse_command(char *str, DynArr *parts, int *is_back) {
   *is_back = 0;
   int success;
 
-  success = string_split(str, parts, ' ');  
+  success = string_split(str, parts, ' ');
   if (success == -1)
     return -1;
   if (strcmp(backDynArr(parts), "&") == 0) {
@@ -202,36 +270,44 @@ int parse_command(char *str, DynArr *parts, int *is_back) {
     removeBackDynArr(parts);
   }
 
-  return 0;  
+  return 0;
 }
-
+/*******************************************************************************
+** Function:    strint_split
+** Arguments:   buffer containing user input,
+**              DynArr into which to tokenize the command,
+**              char to use as delimiter
+** Description: splits buffer by delim into DynArr
+** Pre-conditions:  command is not blank or a comment
+** Post-conditions: command exists in DynArr split by delim
+*******************************************************************************/
 int string_split(char *str, DynArr *deq, char delim) {
+  // open buffer as a FILE stream
   FILE *stream = fmemopen(str, strlen(str), "r");
+  // ensure stream is opened successfully
   if (stream == NULL)
     return -1;
 
-  char *buffer = NULL,
-       *c;
+  char *buffer = NULL,        // set getline buffer to NULL
+       *c;                    // char pointer for strchr return
+  // size_t variables for getdelim call memory capacity and size
   size_t buffer_cap = 0,
          buffer_size;
+
+  // loop through stream by delim and store each word into buffer
   while ((buffer_size = getdelim(&buffer, &buffer_cap, delim, stream)) != -1) {
+    // search for ending space and make null terminator
     c = strchr(buffer, ' ');
-    if (c != NULL) 
+    if (c != NULL)
       *c = 0;
+    // if space isnt found add 1 to buffsize because getdelim doesnt count null
+    // terminator
     else
       buffer_size += 1;
-    
-    if ((c = strstr(buffer, "$$")) != NULL) {
-      int shell_pid = (int)getpid(),
-          pid_len = num_digits(shell_pid);
-      char *buff2 = malloc(sizeof(char) * strlen(buffer));
-      *c = 0;
-      strcpy(buff2, buffer);
-      free(buffer);
-      buffer = malloc((strlen(buff2) + pid_len) * sizeof(char));
-      sprintf(buffer, "%s%d", buff2, shell_pid);
-      free(buff2);
-      buff2 = NULL;
+    // if buffer contains '$$' expand to smallsh's pid
+    while ((c = strstr(buffer, "$$")) != NULL) {
+      int index = c - buffer;
+      buffer_size = expand$$(buffer, index, &buffer_cap);
     }
 
     addBackDynArr(deq, buffer, buffer_size);
@@ -244,6 +320,47 @@ int string_split(char *str, DynArr *deq, char delim) {
 
   fclose(stream);
   return 0;
+}
+
+size_t expand$$(char* str, int index, size_t *str_cap) {
+  int shell_pid = (int)getpid(),          // get pid
+      pid_len = num_digits(shell_pid),
+      buffer_size = strlen(str),
+      resize = 0;
+  DynArr *buffers = createDynArr(2);
+  *(str + index) = 0;
+  *(str + index + 1) = 0;
+
+  if (*str_cap <= buffer_size + pid_len) {
+    resize = 1;
+    *str_cap = (strlen(str) + pid_len) * sizeof(char);\
+  }
+  if (index == 0) {
+    addBackDynArr(buffers, str + index + 2, strlen(str + index + 2));
+    if (resize) {
+      free(str);
+      str = malloc(*str_cap);
+    }
+    sprintf(str, "%d%s", shell_pid, backDynArr(buffers));
+  }
+  else if (index + 2 == buffer_size) {
+    addBackDynArr(buffers, str, strlen(str));
+    if (resize) {
+      free(str);
+      str = malloc(*str_cap);
+    }
+    sprintf(str, "%s%d", backDynArr(buffers), shell_pid);
+  }
+  else {
+    addBackDynArr(buffers, str, strlen(str));
+    addBackDynArr(buffers, str + index + 2, strlen(str + index + 2));
+    if (resize) {
+      free(str);
+      str = malloc(*str_cap);
+    }
+    sprintf(str, "%s%d%s", frontDynArr(buffers), shell_pid, backDynArr(buffers));
+  }
+  return strlen(str);
 }
 
 int num_digits( int pid ) {
@@ -280,7 +397,7 @@ void get_status(int status_flag, int is_sig) {
     printf("No command has been executed\n");
     return;
   }
-  
+
   if(is_sig)
     printf("terminated by signal %d\n", status_flag);
   else
@@ -378,6 +495,3 @@ int trim_string(char *out, int size, char *str) {
  }
  return buff_size;
  }*/
-
-
-

@@ -15,7 +15,7 @@
 #include "./headers/dynamicArrayDeque.h"
 #include "./headers/dynamicArray.h"
 
-struct status_flags 
+struct status_flags
 {
   int status;
   int is_sig;
@@ -31,6 +31,7 @@ char** fill_exec_args(DynArr *parts);
 struct status_flags get_exit_sig(int child_exit);
 int parse_command(char *str, DynArr *parts, int *is_back);
 int string_split(char *str, DynArr *deq, char delim);
+size_t expand$$(char* str, int index, size_t *str_cap);
 int num_digits(int pid);
 int change_dir(char *path);
 void exit_kill(Arr *pids);
