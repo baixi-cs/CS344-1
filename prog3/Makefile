@@ -30,4 +30,4 @@ test_array: ${SRC_PATH}/testDynArray.c ${SRC_PATH}/dynamicArray.c ${H_PATH}/dyna
 	gcc -I${H_PATH} -o $@ ${SRC_PATH}/testDynArray.c ${SRC_PATH}/dynamicArray.c ${CTEST}
 
 clean:
-	rm -f ${FUNC_TARGET} ${DEQUE_TARGET} ${ARRAY_TARGET} smallsh test_deque test_array *.gcda *.gcno *.gcov
+	rm -f ${FUNC_TARGET} ${DEQUE_TARGET} ${ARRAY_TARGET} smallsh test_deque test_array junk junk2 *.gcda *.gcno *.gcov
