@@ -116,8 +116,7 @@ int main() {
         switch (built_in) {
           // If command is CD attempt to change directory and set status
           case CD:
-            status_flag.status = change_dir(getDynArr(ind_command, 1));
-            status_flag.is_sig = 0;
+            change_dir(getDynArr(ind_command, 1));
             break;
           // If command is EXIT kill all background commands and set exit flag
           case EXIT:
