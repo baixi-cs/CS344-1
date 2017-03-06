@@ -46,4 +46,4 @@ file3.write(str3)
 # print the file contents to console
 print(str1 + str2 + str3, end="")
 # print two random numbers and their sum to the console
-print("{0[0]}\n{0[1]}\n{0[2]}\n".format(twoRandAndSum()))
+print("{0[0]}\n{0[1]}\n{0[2]}".format(twoRandAndSum()))
