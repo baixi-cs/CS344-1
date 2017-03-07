@@ -28,20 +28,20 @@ random.seed()
 # get myprogram.py process id
 pid = os.getpid()
 
-# open file1[pid], file2[pid], and file3[pid] for writing
-file1 = open("file1" + str(pid), 'w')
-file2 = open("file2" + str(pid), 'w')
-file3 = open("file3" + str(pid), 'w')
-
 # generate 3 strings of 10 random chars ending in newline
 str1 = tenRandomChar() + "\n"
 str2 = tenRandomChar() + "\n"
 str3 = tenRandomChar() + "\n"
 
 # write each string to a file
-file1.write(str1)
-file2.write(str2)
-file3.write(str3)
+with open("file1_" + str(pid), 'w') as file1:
+    file1.write(str1)
+
+with open("file2_" + str(pid), 'w') as file2:
+    file2.write(str2)
+
+with open("file3_" + str(pid), 'w') as file3:
+    file3.write(str3)
 
 # print the file contents to console
 print(str1 + str2 + str3, end="")
