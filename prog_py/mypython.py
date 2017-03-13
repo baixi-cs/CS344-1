@@ -17,10 +17,10 @@ def tenRandomChar ():
 # Description: Generates two random integers in range [1, 41]
 #              Returns the two integers and the sum in a tuple
 # Preconditions: random is seeded
-def twoRandAndSum ():
+def twoRandAndProduct():
   rand1 = random.randint(1,42)
   rand2 = random.randint(1,42)
-  return rand1, rand2, rand1 + rand2
+  return rand1, rand2, rand1 * rand2
 
 # seed random number generator
 # default seed either 1) default seed for os, if available, or 2) current time
@@ -45,5 +45,5 @@ with open("file3_" + str(pid), 'w') as file3:
 
 # print the file contents to console
 print(str1 + str2 + str3, end="")
-# print two random numbers and their sum to the console
-print("{0[0]}\n{0[1]}\n{0[2]}".format(twoRandAndSum()))
+# print two random numbers and their product to the console
+print("{0[0]}\n{0[1]}\n{0[2]}".format(twoRandAndProduct()))
