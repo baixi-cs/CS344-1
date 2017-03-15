@@ -42,14 +42,13 @@ int main(int argc, char **argv) {
   c = strchr(plain_buff, '\n'); *c = 0;
 
   if (!isValidChars(plain_buff)) {
-    fprintf(stderr, "Error: plaintext must contain valid chars ([A-Z] or     ' ')\n");
+    fprintf(stderr, "Error: input contains bad characters\n");
     free(plain_buff);
     return 1;
   }
 
   *c = '&';  
   
-
   file = fopen(argv[2], "r");
   if (file == NULL) {
     fprintf(stderr, "Error Opening %s: %s\n", argv[2], strerror(errno));
@@ -67,7 +66,7 @@ int main(int argc, char **argv) {
   plain_size = strlen(plain_buff);
 
   if (key_size < plain_size) {
-    fprintf(stderr, "Error: Key should not be smaller than cipher\n");
+    fprintf(stderr, "Error: key '%s' is too short\n", argv[2]);
     return 1;
   }
 
@@ -95,8 +94,8 @@ int main(int argc, char **argv) {
   }
 
   if (connect(sock_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-    fprintf(stderr, "Error: %s\n", strerror(errno));
-    return 1;
+    fprintf(stderr, "Error: could not contact otp_dec_d on port %d\n", port);
+    return 2;
   }
 
   sendSockMessage(sock_fd, auth, strlen(auth) + 1);
