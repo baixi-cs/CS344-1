@@ -7,7 +7,7 @@ SRC_PATH=./src
 
 ARRAY_TARGET=${O_PATH}/dynamicArray.o
 
-all: otp_enc_d otp_enc otp_dec_d otp_dec
+all: otp_enc_d otp_enc otp_dec_d otp_dec keygen
 
 otp_enc_d: otp_enc_d.c otp_lib.c ${ARRAY_TARGET}
 	gcc $^ -o $@ ${CFLAGS}

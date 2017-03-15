@@ -49,8 +49,6 @@ int main(int argc, char **argv) {
 
   *c = '&';  
   
-  if (buff_size * 2 >= plain_buff_cap)
-    resizeBuffer(&plain_buff, buff_size * 2);
 
   file = fopen(argv[2], "r");
   if (file == NULL) {
@@ -68,10 +66,13 @@ int main(int argc, char **argv) {
   key_size = strlen(key_buff);
   plain_size = strlen(plain_buff);
 
-  if (key_size != plain_size) {
-    fprintf(stderr, "Key and Cipher size mismatch\n");
+  if (key_size < plain_size) {
+    fprintf(stderr, "Error: Key should not be smaller than cipher\n");
     return 1;
   }
+
+  if (key_size + plain_size + 1 >= plain_buff_cap)
+    resizeBuffer(&plain_buff, key_size + plain_size + 1);
 
   strcat(plain_buff, key_buff);
   
