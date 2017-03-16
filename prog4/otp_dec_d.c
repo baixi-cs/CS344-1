@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   }
   // DECLARE SIGNAL HANDLERS for SIGCHLD and SIGUSR1
   struct sigaction SIGCHLD_action = {{0}},
-         sigaction SIGUSR1_action = {{0}};
+                   SIGUSR1_action = {{0}};
 
   // set up SIGCHLD handler to toggle foreground-only mode
   SIGCHLD_action.sa_handler = handle_SIGCHLD;
@@ -94,11 +94,11 @@ int main(int argc, char **argv) {
     // also write client information to cli_addr
     conn_fd = accept(listen_fd, (struct sockaddr *)&cli_addr, &cli_addr_size);
     if (conn_fd < 0) {
+      if (close_d)
+        break;
       fprintf(stderr, "Connect Error: %s\n", strerror(errno));
       continue;
     }
-    else if (close_d) // break loop after signal USR1
-      continue;
     // If Connection count has been exceeded tell the client, close socket,
     // and continue
     if (conn_count >= CONN_COUNT) {
