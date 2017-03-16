@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 
   FILE *file;
 
-  int sock_fd, 
+  int sock_fd,
       port,
       key_size,
       plain_size;
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Error Opening %s: %s\n", argv[1], strerror(errno));
     return 1;
   }
-  
+
   buff_size =  getline(&plain_buff, &plain_buff_cap, file);
   if (buff_size < 0) {
     fprintf(stderr, "Read Error %s: %s\n", argv[1], strerror(errno));
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
   }
 
   fclose(file);
-   
+
   c = strchr(plain_buff, '\n'); *c = 0;
 
   if (!isValidChars(plain_buff)) {
@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  *c = '&';  
-  
+  *c = '&';
+
   file = fopen(argv[2], "r");
   if (file == NULL) {
     fprintf(stderr, "Error Opening %s: %s\n", argv[2], strerror(errno));
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     resizeBuffer(&plain_buff, key_size + plain_size + 1);
 
   strcat(plain_buff, key_buff);
-  
+
   memset((char*)&serv_addr, '\0', sizeof(serv_addr));
   port = atoi(argv[3]);
   serv_addr.sin_family = AF_INET;
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   memcpy((char*)&serv_addr.sin_addr.s_addr, (char*)server_host->h_addr, server_host->h_length);
-  
+
   sock_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (sock_fd < 0) {
     fprintf(stderr, "Error: %s\n", strerror(errno));
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
     free(key_buff);
     free(plain_buff);
     return 1;
-  } 
+  }
 
   sendSockMessage(sock_fd, plain_buff, strlen(plain_buff) + 1);
 
