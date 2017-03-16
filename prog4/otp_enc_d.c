@@ -1,19 +1,37 @@
 #include "otp_lib.h"
 
+int conn_count = 0;
+
+void handle_SIGCHLD(int signo) {  
+  conn_count--;
+  int exit_val;
+  wait(&exit_val);
+}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     fprintf(stderr,"Usage: %s <port>\n", argv[0]);
     return 1;
   }
+  // DECLARE SIGNAL HANDLERS for SIGTSTP and SIGINT
+  struct sigaction SIGCHLD_action = {{0}};
 
-  int i = 0,
-      j = 0,
+  // set up SIGTSTP handler to toggle foreground-only mode
+  SIGCHLD_action.sa_handler = handle_SIGCHLD;
+  // fill sa_mask so subsequent signals will block until the current returns
+  sigfillset(&SIGCHLD_action.sa_mask);
+  // set the SA_RESTART flag so that sys calls will attempt re-entry rather
+  // than failing with an error when SIGTSTP is handled
+  SIGCHLD_action.sa_flags = SA_RESTART;
+  // register SIGCHLD hanlder with kernel
+  sigaction(SIGCHLD, &SIGCHLD_action, NULL);
+
+  int j = 0,
       success,
       close_d = 0,
       listen_fd, conn_fd,
       port_num,
-      buff_size,
-      child_exit;
+      buff_size;
 
   socklen_t cli_addr_size;
 
@@ -21,29 +39,28 @@ int main(int argc, char **argv) {
 
   char *buffer = NULL,
        *c,
-       *unauth = "Error: Unauthorized#",
+       *unauth = "Error: otp_dec cannot use otp_enc_d#",
        *conn_exceed = "Error: Connections Exceeded#",
        *auth_seq = "encode",
        *accepted = "accepted#";
 
   struct sockaddr_in serv_addr, 
                      cli_addr;
-  Arr *pids = newArr(5);
 
   memset((char *)&serv_addr, '\0', sizeof(serv_addr));
   port_num = atoi(argv[1]);
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port_num);
   serv_addr.sin_addr.s_addr = INADDR_ANY;
-  
+
   listen_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (listen_fd < 0){
-    perror("Error Opening Socket");
+    perror("otp_enc_d Error Opening Socket");
     return 1;
   }
 
   if (bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-    perror("Error binding port");
+    perror("otp_enc_d Error binding port");
     return 1;
   }
 
@@ -56,13 +73,13 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Connect Error: %s\n", strerror(errno));
       continue;
     }
-    if (sizeArr(pids) >= CONN_COUNT) {
-       buff_size = getSockMessage(conn_fd, &buffer);
-       sendSockMessage(conn_fd, conn_exceed, strlen(conn_exceed));
-       close(conn_fd);
-       free(buffer);
-       buffer = NULL;
-       continue;
+    if (conn_count  >= CONN_COUNT) {
+      buff_size = getSockMessage(conn_fd, &buffer);
+      sendSockMessage(conn_fd, conn_exceed, strlen(conn_exceed));
+      close(conn_fd);
+      free(buffer);
+      buffer = NULL;
+      continue;
     }
     spawn_pid = fork();
 
@@ -96,25 +113,12 @@ int main(int argc, char **argv) {
         free(buffer);
         break;
       default:
-        addArr(pids, spawn_pid);
+        conn_count++;
+        close(conn_fd);
         break;
     }
 
-    // If background process list is not empty
-    if (!isEmptyArr(pids)) {
-      // loop over background processes checking for exit
-      for (i = 0; i < sizeArr(pids); i++) {
-        // call wait pid on pid with WNOHANG flag so it does not hault
-        pid_t temp = waitpid((pid_t)getArr(pids, i), &child_exit, WNOHANG);
-        // if temp !=0 then process has exited
-        if (temp != 0) {
-          // remove background array and decrement loop counter because removal will
-          // move back all subsequent entries
-          removeArr(pids, getArr(pids,i));
-          i--;
-        }
-      }
-    }
   } while ( !close_d );
+
   return 0;
 }

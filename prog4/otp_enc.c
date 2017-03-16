@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
 
   *c = '&';
-  
+
 
   file = fopen(argv[2], "r");
   if (file == NULL) {
@@ -72,9 +72,9 @@ int main(int argc, char **argv) {
 
   if (plain_size + key_size + 1 >= plain_buff_cap)
     resizeBuffer(&plain_buff, plain_size + key_size + 1);
- 
+
   strcat(plain_buff, key_buff);
-  
+
   memset((char*)&serv_addr, '\0', sizeof(serv_addr));
   port = atoi(argv[3]);
   serv_addr.sin_family = AF_INET;
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   memcpy((char*)&serv_addr.sin_addr.s_addr, (char*)server_host->h_addr, server_host->h_length);
-  
+
   sock_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (sock_fd < 0) {
     fprintf(stderr, "Error: %s\n", strerror(errno));

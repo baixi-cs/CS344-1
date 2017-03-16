@@ -1,16 +1,16 @@
 #include "otp_lib.h"
-#include "headers/encoding.h"
+#include "encoding.h"
 
 void encdec(char **str, char *key, int enc) {
   int size = strlen(*str),
       i = 0;
-  
+
   for (; i < size; i++) {
     int s, k, ind;
     s = ((*str)[i] < 65) ? 26 : (*str)[i] - 65;
     k = (key[i] < 65) ? 26 : key[i] - 65;
     ind = mod((enc) ? s + k : s - k, 27);
-    
+
     (*str)[i] = char_list[ind];
   }
   (*str)[i] = '#';
@@ -27,7 +27,7 @@ int authClient(char *auth_str, char *read) {
 
   if ((c = strstr(read, auth_str)) == NULL)
     return -1;
-  
+
   return 0;
 }
 
@@ -95,15 +95,15 @@ int isValidChars(char* input) {
       i = 0,
       j;
   for (; i < size; i++) {
-     int found = 0;
-     for (j = 0; j < CHAR_LEN; j++) {
-        if (input[i] == char_list[j]) {
-          found = 1;
-          break;
-        }
-     }
-     if (!found)
-       return 0;
+    int found = 0;
+    for (j = 0; j < CHAR_LEN; j++) {
+      if (input[i] == char_list[j]) {
+        found = 1;
+        break;
+      }
+    }
+    if (!found)
+      return 0;
   }
   return 1;
 }

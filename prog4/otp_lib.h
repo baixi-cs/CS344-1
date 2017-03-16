@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include "headers/dynamicArray.h"
 
 #define CONN_COUNT 5
 #define BUFFER_START_SIZE 500
