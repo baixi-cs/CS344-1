@@ -32,11 +32,19 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Error Opening %s: %s\n", argv[1], strerror(errno));
     return 1;
   }
+  
   buff_size =  getline(&plain_buff, &plain_buff_cap, file);
   if (buff_size < 0) {
     fprintf(stderr, "Read Error %s: %s\n", argv[1], strerror(errno));
+    fclose(file);
     return 1;
   }
+  else if (buff_size <= 1) {
+    fprintf(stderr, "Error: '%s' is Empty\n", argv[1]);
+    fclose(file);
+    return 1;
+  }
+
   fclose(file);
    
   c = strchr(plain_buff, '\n'); *c = 0;
@@ -57,8 +65,15 @@ int main(int argc, char **argv) {
   buff_size =  getline(&key_buff, &key_buff_cap, file);
   if (buff_size < 0) {
     fprintf(stderr, "Read Error %s: %s\n", argv[2], strerror(errno));
+    fclose(file);
     return 1;
   }
+  else if (buff_size <= 1) {
+    fprintf(stderr, "Error: '%s' is Empty\n", argv[2]);
+    fclose(file);
+    return 1;
+  }
+
   fclose(file);
   c = strchr(key_buff, '\n'); *c = '#';
 
