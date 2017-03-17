@@ -1,3 +1,8 @@
+/*******************************************************************************
+** Program: otp_lib (function library)
+** Project: CS344 Program 4 OTP
+** Author: Jordan Grant (grantjo)
+*******************************************************************************/
 // include otp library header file
 #include "otp_lib.h"
 // include domain of chars for encryption in char_list array

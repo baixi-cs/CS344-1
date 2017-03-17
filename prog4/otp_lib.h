@@ -1,3 +1,8 @@
+/*******************************************************************************
+** Program: otp_lib.h (library header)
+** Project: CS344 Program 4 OTP
+** Author: Jordan Grant (grantjo)
+*******************************************************************************/
 #ifndef OTP_LIB_H
 #define OTP_LIB_H
 

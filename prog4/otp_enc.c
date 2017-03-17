@@ -1,3 +1,8 @@
+/*******************************************************************************
+** Program: otp_enc
+** Project: CS344 Program 4 OTP
+** Author: Jordan Grant (grantjo)
+*******************************************************************************/
 // include primary library for otp programs
 #include "otp_lib.h"
 #include <netdb.h>
