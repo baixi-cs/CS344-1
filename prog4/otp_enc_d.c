@@ -19,7 +19,7 @@ void handle_SIGUSR1(int signo) {
 
 int main(int argc, char **argv) {
   // otp_enc_d requires a port to be specified at launch
-  if (argc < 2) {
+  if (argc < 2 || !isdigit((int)argv[1][0])) {
     fprintf(stderr,"Usage: %s <port>\n", argv[0]);
     return 1;
   }
