@@ -5,13 +5,13 @@ Program 1:
   complete
 
 Program 2:
-  not started
+  complete
 
 Program 3:
-  not started
+  complete
 
 Program 4:
-  not started
+  complete
 
 Program Py:
   complete
