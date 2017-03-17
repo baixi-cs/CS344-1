@@ -49,8 +49,9 @@ int main(int argc, char **argv) {
     return 1;
   }
   // if plaintext is empty or only contains newline print error and exit
-  else if (buff_size <= 1) {
+  else if (strlen(plain_buff) <= 1) {
     fprintf(stderr, "Error: '%s'is Empty\n", argv[1]);
+    free(plain_buff);
     fclose(file);
     return 1;
   }
@@ -78,8 +79,10 @@ int main(int argc, char **argv) {
     return 1;
   }
   // if file is empty or contains only newline print error and exit
-  else if (buff_size <= 1) {
+  else if (strlen(key_buff) <= 1) {
     fprintf(stderr, "Error: '%s'is Empty\n", argv[2]);
+    free(plain_buff);
+    free(key_buff);
     fclose(file);
     return 1;
   }

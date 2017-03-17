@@ -50,7 +50,8 @@ int main(int argc, char **argv) {
     return 1;
   }
   // if cipher is empty or only contains newline print error and exit
-  else if (buff_size <= 1) {
+  else if (strlen(cipher_buff) <= 1) {
+    free(cipher_buff);
     fprintf(stderr, "Error: '%s'is Empty\n", argv[1]);
     fclose(file);
     return 1;
@@ -79,8 +80,10 @@ int main(int argc, char **argv) {
     return 1;
   }
   // if file is empty or contains only newline print error and exit
-  else if (buff_size <= 1) {
+  else if (strlen(key_buff) <= 1) {
     fprintf(stderr, "Error: '%s'is Empty\n", argv[2]);
+    free(key_buff);
+    free(cipher_buff);
     fclose(file);
     return 1;
   }

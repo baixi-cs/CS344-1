@@ -1,2 +1,6 @@
 **/tmp*
 **/file*
+**/currentTime.txt
+**/grantjo.*
+!**/grantjo.adventure.c
+!**/grantjo.buildrooms.c
